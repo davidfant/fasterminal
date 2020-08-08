@@ -287,7 +287,7 @@ const App: FC = () => {
   const subcommandSuggestions = useSubcommandSuggestions(command);
   const commandAutocompleteSuggestions = useCommandAutocomplete(command);
   const suggestions = [...subcommandSuggestions, ...commandAutocompleteSuggestions];
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<number>();
+  const [selectedSuggestion, setSelectedSuggestion] = useState<AutocompleteSuggestion>(suggestions[0]);
 
   const currentCommand = useCurrentCommand(command);
 
@@ -300,52 +300,54 @@ const App: FC = () => {
 
   const selectSuggestion = useCallback((suggestion: AutocompleteSuggestion) => {
     // whisperRef.current?.hide();
-    setCommand(suggestion.fullCommand || '');
-    setSelectedSuggestionIndex(undefined);
+    setCommand(suggestion.fullCommand);
     // TODO(fant): refocus input
   }, []);
+
+  const selectNextSuggestion = useCallback(() => {
+    const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion.fullCommand);
+    const nextIndex = (index + 1 + suggestions.length) % suggestions.length;
+    setSelectedSuggestion(suggestions[nextIndex]);
+  }, [suggestions, selectedSuggestion, selectSuggestion]);
+
+  const selectPrevSuggestion = useCallback(() => {
+    const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion.fullCommand);
+    const nextIndex = (index - 1 + suggestions.length) % suggestions.length;
+    setSelectedSuggestion(suggestions[nextIndex]);
+  }, [suggestions, selectedSuggestion, selectSuggestion]);
+
+  useEffect(() => {
+    console.warn(selectedSuggestion, suggestions);
+    if (!selectedSuggestion || !suggestions.find((s) => s.fullCommand === selectedSuggestion.fullCommand)) {
+      setSelectedSuggestion(suggestions[0]);
+    }
+  }, [selectedSuggestion, suggestions]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     console.warn(event.nativeEvent.key);
 
     if (event.nativeEvent.key === 'ArrowUp') {
-      if (selectedSuggestionIndex === undefined) {
-        setSelectedSuggestionIndex(suggestions.length - 1);
-      } else if (suggestions.length === 1) {
-        setSelectedSuggestionIndex(undefined)
-      } else {
-        setSelectedSuggestionIndex((selectedSuggestionIndex - 1 + suggestions.length) % suggestions.length);
-      }
+      selectPrevSuggestion();
       event.preventDefault();
     } else if (event.nativeEvent.key === 'ArrowDown') {
-      if (selectedSuggestionIndex === undefined) {
-        setSelectedSuggestionIndex(0);
-      } else if (suggestions.length === 1) {
-        setSelectedSuggestionIndex(undefined)
-      } else {
-        setSelectedSuggestionIndex((selectedSuggestionIndex + 1 + suggestions.length) % suggestions.length);
-      }
+      selectNextSuggestion();
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Escape') {
-      setSelectedSuggestionIndex(undefined);
+      // setSelectedSuggestionIndex(undefined);
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Tab') {
-      if (selectedSuggestionIndex !== undefined) {
-        selectSuggestion(suggestions[selectedSuggestionIndex])
-      } else if (!!suggestions.length) {
-        selectSuggestion(suggestions[0]);
-      }
+      if (!!selectedSuggestion) selectSuggestion(selectedSuggestion);
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Enter') {
-      if (selectedSuggestionIndex !== undefined) {
-        selectSuggestion(suggestions[selectedSuggestionIndex])
+      if (!!selectedSuggestion) {
+        selectSuggestion(selectedSuggestion);
         event.preventDefault();
       } else if (!event.shiftKey) {
         alert('submit.');
         event.preventDefault();
       }
     }
-  }, [suggestions, selectedSuggestionIndex, selectSuggestion]);
+  }, [suggestions, selectedSuggestion, selectSuggestion, selectNextSuggestion, selectPrevSuggestion]);
 
   const optionsForm = useCommandOptionsForm(currentCommand?.options);
 
@@ -353,51 +355,53 @@ const App: FC = () => {
     <Container style={{height: '100vh'}}>
       <Content>
       </Content>
-      <Footer style={{position: 'relative', padding: 8}}>
-        <Popover
-          full
-          visible={true || !!subcommandSuggestions.length || !!commandAutocompleteSuggestions.length || !currentCommand?.description}
-          style={{top: 'unset', bottom: '100%'}}
-        >
-          {!!currentCommand?.name && <Tag>{currentCommand.name}</Tag>}
-          {!!currentCommand?.options && (
-            <Form onChange={optionsForm.onChange}>
-              {optionsForm.component}
-            </Form>
-          )}
-          {!!optionsForm.string && `Form options: ${optionsForm.string}`}
+      <Footer style={{padding: 8}}>
+        <div style={{position: 'relative'}}>
+          <Popover
+            full
+            visible={true || !!subcommandSuggestions.length || !!commandAutocompleteSuggestions.length || !currentCommand?.description}
+            style={{top: 'unset', bottom: 'calc(100% + 8px)'}}
+          >
+            {!!currentCommand?.name && <Tag>{currentCommand.name}</Tag>}
+            {!!currentCommand?.options && (
+              <Form onChange={optionsForm.onChange}>
+                {optionsForm.component}
+              </Form>
+            )}
+            {!!optionsForm.string && `Form options: ${optionsForm.string}`}
 
-          <Dropdown.Menu onSelect={selectSuggestion}>
-            {suggestions.map((suggestion, index) => (
-              <Dropdown.Item 
-                className={index === selectedSuggestionIndex ? 'active' : undefined}
-                key={suggestion.command}
-                eventKey={suggestion}
-              >
-                <Tag componentClass="code">
-                  {suggestion.command}
-                </Tag>
-                {!!suggestion.name && ` (${suggestion.name})`}
-                {!!suggestion.description && <HelpBlock tooltip>{suggestion.description}</HelpBlock>}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Popover>
-        {/*
-        <Input
-          componentClass="textarea"
-          autoFocus
-          value={command}
-          onChange={setCommand}
-          onKeyDown={handleKeyDown}
-        />
-        */}
-        <TerminalInput
-          autoFocus
-          value={command}
-          onChange={setCommand}
-          onKeyDown={handleKeyDown}
-        />
+            <Dropdown.Menu onSelect={selectSuggestion}>
+              {suggestions.map((suggestion, index) => (
+                <Dropdown.Item 
+                  className={suggestion.fullCommand === selectedSuggestion?.fullCommand ? 'active' : undefined}
+                  key={suggestion.command}
+                  eventKey={suggestion}
+                >
+                  <Tag componentClass="code">
+                    {suggestion.command}
+                  </Tag>
+                  {!!suggestion.name && ` (${suggestion.name})`}
+                  {!!suggestion.description && <HelpBlock tooltip>{suggestion.description}</HelpBlock>}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Popover>
+          {/*
+          <Input
+            componentClass="textarea"
+            autoFocus
+            value={command}
+            onChange={setCommand}
+            onKeyDown={handleKeyDown}
+          />
+          */}
+          <TerminalInput
+            autoFocus
+            value={command}
+            onChange={setCommand}
+            onKeyDown={handleKeyDown}
+          />
+        </div>
       </Footer>
     </Container>
   );

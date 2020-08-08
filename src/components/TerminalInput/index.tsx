@@ -15,7 +15,7 @@ export const TerminalInput: FC<Props> = ({autoFocus, value, onChange, onKeyDown}
   }, [onChange]);
   return (
     <TextareaAutosize
-      className="terminal-input"
+      className="rs-input terminal-input"
       autoFocus={autoFocus}
       value={value}
       onChange={handleChange}

@@ -1,8 +1,10 @@
 
-@import '~rsuite/lib/styles/themes/default/index.less';
+// @import '~rsuite/lib/styles/themes/default/index.less';
+@import '~rsuite/lib/styles/themes/dark/index.less';
 
 .rs-dropdown-menu > .rs-dropdown-item.active > .rs-dropdown-item-content {
-  background-color: @H050;
+  /*background-color: @H050;*/
+  background-color: @dropdown-link-hover-bg;
 }
 
 code.rs-tag.rs-tag-default {
@@ -11,7 +13,7 @@ code.rs-tag.rs-tag-default {
 
   .rs-dropdown-item.active &,
   .rs-dropdown-item:hover &  {
-    background-color: @H200;
+    background-color: @btn-default-active-bg;
   }
 }
 
