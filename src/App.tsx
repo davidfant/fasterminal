@@ -1,8 +1,9 @@
-import React, {FC, ReactNode, KeyboardEvent, useState, useCallback, useEffect, useMemo} from 'react';
+import React, {FC, ReactNode, KeyboardEvent, useState, useCallback, useContext, useEffect, useMemo} from 'react';
 import * as _ from 'lodash';
-import { Popover, Tag, Dropdown, Input, Container, Content, Footer, InputGroup, Icon, FormGroup, ControlLabel, HelpBlock, FormControl, Form, Checkbox, CheckboxGroup, Radio, RadioGroup, CheckPicker, Toggle } from 'rsuite';
-import { WhisperInstance } from 'rsuite/lib/Whisper';
+import { Popover, Tag, Dropdown, Container, Content, Footer, FormGroup, ControlLabel, HelpBlock, FormControl, Form, CheckPicker, Toggle } from 'rsuite';
 import {TerminalInput} from './components/TerminalInput';
+import {TerminalOutput} from './components/TerminalOutput';
+import {ShellContext} from './client/shellContext';
 
 interface AutocompleteSuggestion {
   command: string;
@@ -161,7 +162,7 @@ function findCommandLeafRecursive(command: string, tree: CommandTree = commandTr
   if (!!subtree) {
     if (parts.length === 1) return subtree;
     if (!!subtree.subcommands) {
-      return findCommandLeafRecursive(parts.slice(1).join(' '), subtree. subcommands);
+      return findCommandLeafRecursive(parts.slice(1).join(' '), subtree.subcommands);
     }
   }
 
@@ -282,7 +283,7 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
 
 const App: FC = () => {
   const [command, setCommand] = useState('');
-  // const whisperRef = useRef<WhisperInstance>();
+  const {runCommand} = useContext(ShellContext);
 
   const subcommandSuggestions = useSubcommandSuggestions(command);
   const commandAutocompleteSuggestions = useCommandAutocomplete(command);
@@ -308,7 +309,7 @@ const App: FC = () => {
     const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion?.fullCommand);
     const nextIndex = (index + 1 + suggestions.length) % suggestions.length;
     setSelectedSuggestion(suggestions[nextIndex]);
-  }, [suggestions, selectedSuggestion, selectSuggestion]);
+  }, [suggestions, selectedSuggestion]);
 
   const selectPrevSuggestion = useCallback(() => {
     const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion?.fullCommand);
@@ -318,7 +319,7 @@ const App: FC = () => {
     }
     const nextIndex = (index - 1 + suggestions.length) % suggestions.length;
     setSelectedSuggestion(suggestions[nextIndex]);
-  }, [suggestions, selectedSuggestion, selectSuggestion]);
+  }, [suggestions, selectedSuggestion]);
 
   useEffect(() => {
     if (!selectedSuggestion || !suggestions.find((s) => s.fullCommand === selectedSuggestion.fullCommand)) {
@@ -358,23 +359,25 @@ const App: FC = () => {
         event.preventDefault();
       } else if (!event.shiftKey) {
         */
-        alert('submit.');
+        runCommand(command);
+        setCommand('');
         event.preventDefault();
       // }
     }
-  }, [suggestions, selectedSuggestion, selectSuggestion, selectNextSuggestion, selectPrevSuggestion]);
+  }, [selectPrevSuggestion, selectNextSuggestion, selectedSuggestion, suggestions, selectSuggestion, runCommand, command]);
 
   const optionsForm = useCommandOptionsForm(currentCommand?.options);
 
   return (
     <Container style={{height: '100vh'}}>
       <Content>
+        <TerminalOutput/>
       </Content>
       <Footer style={{padding: 8}}>
         <div style={{position: 'relative'}}>
           <Popover
             full
-            visible={true || !!subcommandSuggestions.length || !!commandAutocompleteSuggestions.length || !currentCommand?.description}
+            visible
             style={{top: 'unset', bottom: 'calc(100% + 8px)'}}
           >
             {!!currentCommand?.name && <Tag>{currentCommand.name}</Tag>}
@@ -401,15 +404,6 @@ const App: FC = () => {
               ))}
             </Dropdown.Menu>
           </Popover>
-          {/*
-          <Input
-            componentClass="textarea"
-            autoFocus
-            value={command}
-            onChange={setCommand}
-            onKeyDown={handleKeyDown}
-          />
-          */}
           <TerminalInput
             autoFocus
             value={command}
