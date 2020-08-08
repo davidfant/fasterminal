@@ -1,4 +1,4 @@
-import React, {FC, KeyboardEvent, ChangeEvent, ChangeEventHandler, useCallback} from 'react';
+import React, {FC, KeyboardEvent, ChangeEvent, useCallback} from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import './styles.less';
 

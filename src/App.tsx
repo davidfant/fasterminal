@@ -1,16 +1,11 @@
 import React, {FC, ReactNode, KeyboardEvent, useState, useCallback, useContext, useEffect, useMemo} from 'react';
 import * as _ from 'lodash';
-import { Popover, Tag, Dropdown, Container, Content, Footer, FormGroup, ControlLabel, HelpBlock, FormControl, Form, CheckPicker, Toggle } from 'rsuite';
+import { Popover, Tag, Dropdown, Container, FormGroup, ControlLabel, HelpBlock, FormControl, Form, CheckPicker, Toggle } from 'rsuite';
 import {TerminalInput} from './components/TerminalInput';
 import {TerminalOutput} from './components/TerminalOutput';
+import {SuggestionItem} from './components/TerminalInput/suggestion';
 import {ShellContext} from './client/shellContext';
-
-interface AutocompleteSuggestion {
-  command: string;
-  name?: string;
-  description?: string;
-  fullCommand: string;
-}
+import {AutocompleteSuggestion} from './types';
 
 type CommandTree = {[key: string]: Command};
 
@@ -333,6 +328,20 @@ const App: FC = () => {
     */
   }, [selectedSuggestion, suggestions]);
 
+  const optionsForm = useCommandOptionsForm(currentCommand?.options);
+
+  const autocomplete = (() => {
+    if (!!selectedSuggestion) return selectedSuggestion.fullCommand;
+    if (!!optionsForm) return [command.trimEnd(), optionsForm.string].join(' ');
+    return undefined;
+  })();
+
+  const selectAutocomplete = useCallback(() => {
+    if (!!autocomplete) {
+      setCommand(autocomplete);
+    }
+  }, [autocomplete]);
+
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     console.warn(event.nativeEvent.key);
 
@@ -346,11 +355,13 @@ const App: FC = () => {
       setSelectedSuggestion(undefined);
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Tab') {
+      selectAutocomplete();
+      /*
       if (!!selectedSuggestion) {
-        selectSuggestion(selectedSuggestion);
       } else if (!!suggestions.length) {
         setSelectedSuggestion(suggestions[0]);
       }
+      */
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Enter') {
       /*
@@ -364,55 +375,46 @@ const App: FC = () => {
         event.preventDefault();
       // }
     }
-  }, [selectPrevSuggestion, selectNextSuggestion, selectedSuggestion, suggestions, selectSuggestion, runCommand, command]);
-
-  const optionsForm = useCommandOptionsForm(currentCommand?.options);
+  }, [selectPrevSuggestion, selectNextSuggestion, selectAutocomplete, runCommand, command]);
 
   return (
-    <Container style={{height: '100vh'}}>
-      <Content>
+    <Container style={{height: '100vh', display: 'flex'}}>
+      <div style={{flex: 1, overflow: 'hidden', padding: 8}}>
         <TerminalOutput/>
-      </Content>
-      <Footer style={{padding: 8}}>
+      </div>
+      <div style={{padding: 8}}>
         <div style={{position: 'relative'}}>
           <Popover
             full
             visible
-            style={{top: 'unset', bottom: 'calc(100% + 8px)'}}
+            style={{top: 'unset', bottom: 'calc(100% + 8px)', maxHeight: 290, overflow: 'scroll'}}
           >
-            {!!currentCommand?.name && <Tag>{currentCommand.name}</Tag>}
+            {/*!!currentCommand?.name && <Tag>{currentCommand.name}</Tag>*/}
             {!!currentCommand?.options && (
               <Form onChange={optionsForm.onChange}>
                 {optionsForm.component}
               </Form>
             )}
-            {!!optionsForm.string && `Form options: ${optionsForm.string}`}
 
             <Dropdown.Menu onSelect={selectSuggestion}>
-              {suggestions.map((suggestion, index) => (
-                <Dropdown.Item 
-                  className={suggestion.fullCommand === selectedSuggestion?.fullCommand ? 'active' : undefined}
-                  key={suggestion.command}
-                  eventKey={suggestion}
-                >
-                  <Tag componentClass="code">
-                    {suggestion.command}
-                  </Tag>
-                  {!!suggestion.name && ` (${suggestion.name})`}
-                  {!!suggestion.description && <HelpBlock tooltip>{suggestion.description}</HelpBlock>}
-                </Dropdown.Item>
+              {suggestions.map((suggestion) => (
+                <SuggestionItem
+                  key={suggestion.fullCommand}
+                  suggestion={suggestion}
+                  selected={suggestion.fullCommand === selectedSuggestion?.fullCommand}
+                />
               ))}
             </Dropdown.Menu>
           </Popover>
           <TerminalInput
             autoFocus
             value={command}
-            autocomplete={selectedSuggestion?.fullCommand}
+            autocomplete={autocomplete}
             onChange={setCommand}
             onKeyDown={handleKeyDown}
           />
         </div>
-      </Footer>
+      </div>
     </Container>
   );
 }

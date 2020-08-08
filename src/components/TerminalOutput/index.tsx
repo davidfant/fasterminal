@@ -1,6 +1,9 @@
 import React, {FC, useContext, useCallback, useEffect, useState, useRef} from 'react';
 // @ts-ignore
 import ConvertANSI from 'ansi-to-html';
+// @ts-ignore
+import ScrollToBottom from 'react-scroll-to-bottom';
+import './styles.less';
 import { ShellContext } from '../../client/shellContext';
 
 // var Convert = require('ansi-to-html');
@@ -29,11 +32,10 @@ export const TerminalOutput: FC<Props> = ({}) => {
   }), [shell.addListener]); // eslint-disable-line
 
   return (
-    <code>
-      {/*
-      {log}
-    */}
-    <div dangerouslySetInnerHTML={{__html: log}} />
-    </code>
+    <ScrollToBottom className="terminal-output">
+      <code style={{backgroundColor: 'red'}}>
+        <div dangerouslySetInnerHTML={{__html: log}} />
+      </code>
+    </ScrollToBottom>
   );
 }
