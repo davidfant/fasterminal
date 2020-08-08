@@ -321,14 +321,15 @@ const App: FC = () => {
   }, [suggestions, selectedSuggestion, selectSuggestion]);
 
   useEffect(() => {
-    /*
     if (!selectedSuggestion || !suggestions.find((s) => s.fullCommand === selectedSuggestion.fullCommand)) {
       setSelectedSuggestion(suggestions[0]);
     }
-    */
+
+    /*
     if (!!selectedSuggestion && !suggestions.find((s) => s.fullCommand === selectedSuggestion.fullCommand)) {
       setSelectedSuggestion(undefined);
     }
+    */
   }, [selectedSuggestion, suggestions]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -351,13 +352,15 @@ const App: FC = () => {
       }
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Enter') {
+      /*
       if (!!selectedSuggestion) {
         selectSuggestion(selectedSuggestion);
         event.preventDefault();
       } else if (!event.shiftKey) {
+        */
         alert('submit.');
         event.preventDefault();
-      }
+      // }
     }
   }, [suggestions, selectedSuggestion, selectSuggestion, selectNextSuggestion, selectPrevSuggestion]);
 
