@@ -1,0 +1,21 @@
+
+@import '~rsuite/lib/styles/themes/default/index.less';
+
+.rs-dropdown-menu > .rs-dropdown-item.active > .rs-dropdown-item-content {
+  background-color: @H050;
+}
+
+code.rs-tag.rs-tag-default {
+  transition: 0.3s background-color;
+
+  .rs-dropdown-item.active &,
+  .rs-dropdown-item:hover &  {
+    background-color: @H200;
+  }
+}
+
+.rs-picker-menu {
+  /* rs-popover's z-index is 1060 */
+  z-index: 1070;
+}
+
