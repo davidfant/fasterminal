@@ -12,6 +12,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
+    "react-textarea-autosize": "^8.2.0",
     "rsuite": "^4.8.0",
     "typescript": "~3.7.2"
   },

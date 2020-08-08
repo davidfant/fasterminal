@@ -12,7 +12,8 @@ module.exports = override(
     lessOptions: {
       javascriptEnabled: true,
       modifyVars: {
-        '@H050': '#d6edff'
+        '@H050': '#d6edff',
+        '@font-family-mono': 'source-code-pro, Menlo, Monaco, Consolas, \'Courier New\', monospace'
       }
     },
   })

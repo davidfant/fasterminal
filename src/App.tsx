@@ -2,6 +2,7 @@ import React, {FC, ReactNode, KeyboardEvent, useState, useCallback, useEffect, u
 import * as _ from 'lodash';
 import { Popover, Tag, Dropdown, Input, Container, Content, Footer, InputGroup, Icon, FormGroup, ControlLabel, HelpBlock, FormControl, Form, Checkbox, CheckboxGroup, Radio, RadioGroup, CheckPicker, Toggle } from 'rsuite';
 import { WhisperInstance } from 'rsuite/lib/Whisper';
+import {TerminalInput} from './components/TerminalInput';
 
 interface AutocompleteSuggestion {
   command: string;
@@ -352,7 +353,7 @@ const App: FC = () => {
     <Container style={{height: '100vh'}}>
       <Content>
       </Content>
-      <Footer style={{position: 'relative'}}>
+      <Footer style={{position: 'relative', padding: 8}}>
         <Popover
           full
           visible={true || !!subcommandSuggestions.length || !!commandAutocompleteSuggestions.length || !currentCommand?.description}
@@ -382,8 +383,16 @@ const App: FC = () => {
             ))}
           </Dropdown.Menu>
         </Popover>
+        {/*
         <Input
           componentClass="textarea"
+          autoFocus
+          value={command}
+          onChange={setCommand}
+          onKeyDown={handleKeyDown}
+        />
+        */}
+        <TerminalInput
           autoFocus
           value={command}
           onChange={setCommand}
