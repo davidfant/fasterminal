@@ -1,12 +1,31 @@
 
-textarea.terminal-input {
-  resize: none;
-  width: 100%;
-  font-family: @font-family-mono;
-  font-weight: bold;
-  
-  &.rs-input {
+@import '~rsuite/lib/styles/themes/dark/index.less';
+@import '~rsuite/lib/styles/themes/dark/variables.less';
+
+.terminal-input {
+  textarea {
+    &:extend(.rs-input);
     min-height: unset;
     max-height: unset;
+
+    resize: none;
+    width: 100%;
+  }
+  
+  textarea, .autocomplete {
+    font-family: @font-family-mono;
+    font-weight: bold;
+  }
+
+  .autocomplete {
+    color: @input-color-placeholder;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    user-select: none;
+    pointer-events: none;
+    padding: 8px 12px; /* same as .rs-input's padding + 1px border */
   }
 }

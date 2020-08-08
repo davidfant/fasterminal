@@ -287,7 +287,7 @@ const App: FC = () => {
   const subcommandSuggestions = useSubcommandSuggestions(command);
   const commandAutocompleteSuggestions = useCommandAutocomplete(command);
   const suggestions = [...subcommandSuggestions, ...commandAutocompleteSuggestions];
-  const [selectedSuggestion, setSelectedSuggestion] = useState<AutocompleteSuggestion>(suggestions[0]);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<AutocompleteSuggestion | undefined>(suggestions[0]);
 
   const currentCommand = useCurrentCommand(command);
 
@@ -305,21 +305,29 @@ const App: FC = () => {
   }, []);
 
   const selectNextSuggestion = useCallback(() => {
-    const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion.fullCommand);
+    const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion?.fullCommand);
     const nextIndex = (index + 1 + suggestions.length) % suggestions.length;
     setSelectedSuggestion(suggestions[nextIndex]);
   }, [suggestions, selectedSuggestion, selectSuggestion]);
 
   const selectPrevSuggestion = useCallback(() => {
-    const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion.fullCommand);
+    const index = suggestions.findIndex((s) => s.fullCommand === selectedSuggestion?.fullCommand);
+    if (index === -1) {
+      setSelectedSuggestion(suggestions[suggestions.length - 1]);
+      return;
+    }
     const nextIndex = (index - 1 + suggestions.length) % suggestions.length;
     setSelectedSuggestion(suggestions[nextIndex]);
   }, [suggestions, selectedSuggestion, selectSuggestion]);
 
   useEffect(() => {
-    console.warn(selectedSuggestion, suggestions);
+    /*
     if (!selectedSuggestion || !suggestions.find((s) => s.fullCommand === selectedSuggestion.fullCommand)) {
       setSelectedSuggestion(suggestions[0]);
+    }
+    */
+    if (!!selectedSuggestion && !suggestions.find((s) => s.fullCommand === selectedSuggestion.fullCommand)) {
+      setSelectedSuggestion(undefined);
     }
   }, [selectedSuggestion, suggestions]);
 
@@ -333,10 +341,14 @@ const App: FC = () => {
       selectNextSuggestion();
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Escape') {
-      // setSelectedSuggestionIndex(undefined);
+      setSelectedSuggestion(undefined);
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Tab') {
-      if (!!selectedSuggestion) selectSuggestion(selectedSuggestion);
+      if (!!selectedSuggestion) {
+        selectSuggestion(selectedSuggestion);
+      } else if (!!suggestions.length) {
+        setSelectedSuggestion(suggestions[0]);
+      }
       event.preventDefault();
     } else if (event.nativeEvent.key === 'Enter') {
       if (!!selectedSuggestion) {
@@ -398,6 +410,7 @@ const App: FC = () => {
           <TerminalInput
             autoFocus
             value={command}
+            autocomplete={selectedSuggestion?.fullCommand}
             onChange={setCommand}
             onKeyDown={handleKeyDown}
           />
