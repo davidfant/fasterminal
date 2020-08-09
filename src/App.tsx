@@ -1,11 +1,11 @@
 import React, {FC, ReactNode, KeyboardEvent, useState, useCallback, useContext, useEffect, useMemo} from 'react';
 import * as _ from 'lodash';
-import { Popover, Tag, Icon, Dropdown, Container, FormGroup, ControlLabel, HelpBlock, FormControl, Form, CheckPicker, Toggle, Loader, Modal, Button } from 'rsuite';
+import { Popover, Dropdown, Container, FormGroup, ControlLabel, HelpBlock, FormControl, Form, CheckPicker, Toggle } from 'rsuite';
 import {TerminalInput} from './components/TerminalInput';
 import {TerminalOutput} from './components/TerminalOutput';
 import {SuggestionItem} from './components/TerminalInput/suggestion';
 import {ShellContext} from './client/shellContext';
-import {StackExchange, Question, Answer} from 'stackexchange-api';
+import {useStackoverflowSearch} from './plugins/stackoverflow';
 import {AutocompleteSuggestion} from './types';
 
 type CommandTree = {[key: string]: Command};
@@ -201,119 +201,6 @@ function useCommandAutocomplete(fullCommand: string): AutocompleteSuggestion[] {
 function useCurrentCommand(fullCommand: string): Command | undefined {
   return findCommandLeafRecursive(fullCommand);
 }
-
-function useStackoverflowSearch(command: string, visible: boolean): {
-  visible: boolean;
-  component: ReactNode;
-  onPressArrowUp(): void;
-  onPressArrowDown(): void;
-  onPressTab(): void;
-} {
-  const [searching, setSearching] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [questions, setQuestions] = useState<Question[] | null>(null);
-  const [answer, setAnswer] = useState<Answer | undefined>(undefined);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | undefined>(undefined);
-
-  const startSearching = useCallback(async () => {
-    setSearching(true);
-    setQuestions(null);
-
-    try {
-      setLoading(true);
-      const res = await StackExchange.advancedSearch({
-        site: 'stackoverflow',
-        q: command,
-        sort: 'relevance',
-        pageSize: 5
-      });
-
-      setQuestions(res.items);
-    } finally {
-      setLoading(false);
-    }
-  }, [command]);
-
-  const showAnswer = useCallback(async (question: Question) => {
-    const res = await StackExchange.getAnswersByIds({
-      ids: [String(question.acceptedAnswerId)],
-      site: 'stackoverflow',
-      filter: 'withbody',
-    });
-
-    setAnswer(res.items?.[0]);
-    setSelectedQuestion(question);
-    console.error(res.items);
-  }, []);
-
-  const closeAnswer = useCallback(() => {
-    setAnswer(undefined);
-    setSelectedQuestion(undefined);
-  }, []);
-
-  useEffect(() => {
-    if (!visible) setSearching(false);
-  }, [visible]);
-  useEffect(() => setSearching(false), [command]);
-
-  const component = useMemo<ReactNode>(() => {
-    // return <Loader style={{padding: 8}} content="Searching..." />;
-    if (!visible || !command) return null;
-    if (!searching) {
-      return (
-        <Dropdown.Menu onSelect={startSearching}>
-          <Dropdown.Item>
-            <Icon icon="stack-overflow" />
-            Search on Stack Overflow:
-            <Tag componentClass="code" style={{marginLeft: 8}}>
-              {command}
-            </Tag>
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      );
-    }
-    if (loading) return <Loader style={{padding: 8}} content="Searching..." />;
-    if (!!questions) {
-      return (
-        <>
-          <Dropdown.Menu onSelect={showAnswer}>
-            {questions.map((question) => (
-              <Dropdown.Item eventKey={question} key={question.questionId || undefined}>
-                <Tag componentClass="code" style={{marginRight: 8}}>
-                  {question.score} votes
-                </Tag>
-                <div style={{display: 'inline'}} dangerouslySetInnerHTML={{__html: question.title!}} />
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-          <Modal full show={!!answer} onHide={closeAnswer}>
-            <Modal.Header>
-              <Modal.Title>{selectedQuestion?.title}</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <div dangerouslySetInnerHTML={{__html: answer?.body!}} />
-            </Modal.Body>
-            <Modal.Footer>
-              {/* TODO(fant): get the answer.shareLink from the bs API */}
-              <Button>
-                <a target="_blank" href={`https://stackoverflow.com/a/${answer?.answerId}`}>
-                  <Icon icon="external-link" /> Open on Stack Overflow
-                </a>
-              </Button>
-            </Modal.Footer>
-          </Modal>
-        </>
-      );
-    }
-    return null;
-  }, [answer, closeAnswer, command, loading, questions, searching, selectedQuestion, showAnswer, startSearching, visible]);
-  const onPressArrowUp = useCallback(() => console.error('up'), []);
-  const onPressArrowDown = useCallback(() => console.error('own'), []);
-  const onPressTab = useCallback(() => console.error('tab'), []);
-
-  return useMemo(() => ({visible, component, onPressArrowUp, onPressArrowDown, onPressTab}), [visible, component, onPressArrowUp, onPressArrowDown, onPressTab]);
-}
-
 function useCommandOptionsForm(options: CommandOption[] | undefined): {
   string: string | undefined;
   component: ReactNode;
@@ -401,13 +288,6 @@ const App: FC = () => {
 
   const currentCommand = useCurrentCommand(command);
   const stackoverflowSearch = useStackoverflowSearch(command, !suggestions.length && !currentCommand?.options);
-
-  /*
-  useEffect(() => {
-    if (!!subcommandSuggestions.length) whisperRef.current?.open();
-    else whisperRef.current?.hide();
-  }, [!!subcommandSuggestions.length]);
-  */
 
   const selectSuggestion = useCallback((suggestion: AutocompleteSuggestion) => {
     // whisperRef.current?.hide();
@@ -504,7 +384,6 @@ const App: FC = () => {
             visible
             style={{top: 'unset', bottom: 'calc(100% + 8px)', maxHeight: 290, overflow: 'scroll'}}
           >
-            {/*!!currentCommand?.name && <Tag>{currentCommand.name}</Tag>*/}
             {!!currentCommand?.options && (
               <Form onChange={optionsForm.onChange}>
                 {optionsForm.component}
