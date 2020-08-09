@@ -40,40 +40,30 @@ function useSubcommandSuggestions(ast: ASTNode[]): AutocompleteSuggestion[] {
       {type: 'command', command: subcommand},
     ]),
   }));
-
-  
-  
-/*
-  const commandTreeLeaf = findCommandLeafRecursive(fullCommand);
-
-  if (!commandTreeLeaf?.subcommands) return [];
-  return Object.keys(commandTreeLeaf.subcommands).map((subcommand) => ({
-    command: subcommand,
-    name: commandTreeLeaf.subcommands?.[subcommand].name,
-    description: commandTreeLeaf.subcommands?.[subcommand].description,
-    fullCommand: [fullCommand, subcommand, ''].map((c) => c.trim()).join(' ')
-  }));
-  */
 }
 
-function useCommandAutocomplete(fullCommand: string): AutocompleteSuggestion[] {
-  if (!fullCommand.trim().length) return [];
-  const commandParts = fullCommand.split(' ');
-  const commandWithoutLastPart = commandParts.slice(0, commandParts.length - 1).join(' ');
-  const commandLastPart = commandParts[commandParts.length - 1];
+function useCommandAutocomplete(ast: ASTNode[]): AutocompleteSuggestion[] {
+  const commandNodes = ast.filter((node) => node.type === 'command') as ASTCommandNode[];
+  const baseCommandNodes = commandNodes.slice(0, commandNodes.length - 1);
+  const baseCommandPath = baseCommandNodes.map((node) => node.command).join('.');
 
-  const subcommands = !!commandWithoutLastPart
-    ? findCommandLeafRecursive(commandWithoutLastPart)?.subcommands
+  const lastCommandNode = commandNodes[commandNodes.length - 1];
+
+  const subcommands = !!baseCommandPath
+    ? _.get(commandTree, baseCommandPath)?.subcommands
     : commandTree;
-  if (!subcommands) return [];
+  if (!subcommands || !lastCommandNode) return [];
   return Object
     .keys(subcommands)
-    .filter((subcommand) => !commandLastPart || subcommand.startsWith(commandLastPart) && subcommand !== commandLastPart)
+    .filter((subcommand) => subcommand.startsWith(lastCommandNode.command))
     .map((subcommand) => ({
       command: subcommand,
-      name: subcommands?.[subcommand].name,
-      description: subcommands?.[subcommand].description,
-      fullCommand: (!!commandWithoutLastPart ? [commandWithoutLastPart, subcommand, ''] : [subcommand, '']).join(' ')
+      name: subcommands[subcommand].name,
+      description: subcommands[subcommand].description,
+      fullCommand: convertASTToString([
+        ...ast.filter((node) => node !== lastCommandNode),
+        {type: 'command', command: subcommand},
+      ]),
     }));
 }
 
@@ -174,7 +164,7 @@ const App: FC = () => {
     }
   }, [command]);
   const subcommandSuggestions = useSubcommandSuggestions(ast);
-  const commandAutocompleteSuggestions = useCommandAutocomplete(command);
+  const commandAutocompleteSuggestions = useCommandAutocomplete(ast);
   const suggestions = [...subcommandSuggestions, ...commandAutocompleteSuggestions];
 
   const [selectedSuggestion, setSelectedSuggestion] = useState<AutocompleteSuggestion | undefined>(suggestions[0]);
