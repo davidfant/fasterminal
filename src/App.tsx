@@ -8,6 +8,7 @@ import {ShellContext} from './client/shellContext';
 import {useStackoverflowSearch} from './plugins/stackoverflow';
 import {AutocompleteSuggestion, Command, CommandTree, CommandOption} from './types';
 import {commandTree} from './plugins';
+import {ASTNode, parse as parseCommandToAST} from './client/ast';
 
 function findCommandLeafRecursive(command: string, tree: CommandTree = commandTree): Command | undefined {
   const parts = command.split(' ').filter((p) => !!p);
@@ -69,8 +70,8 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
   }, [options]);
 
   const component = useMemo((): ReactNode => {
-    return options?.map((option) => (
-      <FormGroup style={{marginBottom: 8}}>
+    return options?.map((option, index) => (
+      <FormGroup key={index} style={{marginBottom: 8}}>
         <ControlLabel>{option.title}</ControlLabel>
         {(() => {
           if (option.type === 'select') {
@@ -114,12 +115,14 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
     string: !options ? undefined : options
       .filter((option) => formValues[option.name] !== undefined)
       .map((option) => {
+        const pre = option.name === option.shortname ? `-${option.shortname}` : `--${option.name}`;
         if (option.type === 'field') {
-          if (option.fieldType === 'number') return `--${option.name} ${formValues[option.name]}`;
+          if (option.fieldType === 'number') return `${pre} ${formValues[option.name]}`;
           if (option.fieldType === 'boolean') {
-            return formValues[option.name] ? `--${option.name}` : undefined;
+            return formValues[option.name] ? pre : undefined;
           }
-          return `--${option.name} "${formValues[option.name]}"`;
+
+          return `${pre} "${formValues[option.name]}"`;
         }
 
         if (option.type === 'select') {

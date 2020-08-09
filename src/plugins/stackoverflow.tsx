@@ -12,14 +12,14 @@ export function useStackoverflowSearch(command: string, visible: boolean): {
 } {
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [questions, setQuestions] = useState<Question[] | null>(null);
+  const [questions, setQuestions] = useState<Question[] | undefined>(undefined);
   const [showingAnswer, setShowingAnswer] = useState(false);
   const [answer, setAnswer] = useState<Answer | undefined>(undefined);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | undefined>(undefined);
 
   const startSearching = useCallback(async () => {
     setSearching(true);
-    setQuestions(null);
+    setQuestions(undefined);
 
     try {
       setLoading(true);
@@ -30,7 +30,7 @@ export function useStackoverflowSearch(command: string, visible: boolean): {
         pageSize: 5
       });
 
-      setQuestions(res.items);
+      setQuestions(res.items?.filter((q) => !!q.acceptedAnswerId));
     } finally {
       setLoading(false);
     }
