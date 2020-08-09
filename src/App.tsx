@@ -98,24 +98,23 @@ function useCommandOptionsForm(options: CommandOption[] | undefined, ast: ASTNod
     }
   }, [ast, formValues]);
 
+  const optionNamesInAST = useMemo(() => {
+    let names: string[] = [];
+    const addOptionName = (option: ASTOptionNode) => names.push(option.name!);
+    ast.forEach((node) => {
+      if (node.type === 'option') addOptionName(node);
+      if (node.type === 'optionGroup') node.options.map(addOptionName);
+    });
+
+    return names;
+  }, [ast]);
+
   const component = useMemo((): ReactNode => {
     return options?.map((option, index) => (
       <FormGroup key={index} style={{marginBottom: 8}}>
         <ControlLabel>{option.title}</ControlLabel>
         {(() => {
           if (option.type === 'select') {
-            /*
-            const ItemComponent = option.multi ? Checkbox : Radio;
-            const GroupComponent = option.multi ? CheckboxGroup : RadioGroup;
-            return (
-              <FormControl name={option.name} accepter={GroupComponent} inline>
-                {option.items.map(({value, label}) => (
-                  <ItemComponent value={value}>{value || label}</ItemComponent>
-                ))}
-              </FormControl>
-            );
-            */
-           
             return (
               <FormControl
                 name={option.name}
@@ -157,6 +156,8 @@ function useCommandOptionsForm(options: CommandOption[] | undefined, ast: ASTNod
     string: !options ? undefined : options
       .filter((option) => formValues[option.name] !== undefined)
       .map((option) => {
+        if (optionNamesInAST.includes(option.name)) return undefined;
+
         const pre = option.name === option.shortname ? `-${option.shortname}` : `--${option.name}`;
         if (option.type === 'field') {
           if (option.fieldType === 'number') return `${pre} ${formValues[option.name]}`;
@@ -201,7 +202,6 @@ const App: FC = () => {
   const [selectedSuggestion, setSelectedSuggestion] = useState<AutocompleteSuggestion | undefined>(suggestions[0]);
 
   const currentCommand = useCommand(ast);
-  console.error('curr', currentCommand);
   const stackoverflowSearch = useStackoverflowSearch(command, !suggestions.length && !currentCommand?.options);
 
   const selectSuggestion = useCallback((suggestion: AutocompleteSuggestion) => {
@@ -239,6 +239,13 @@ const App: FC = () => {
   }, [selectedSuggestion, suggestions]);
 
   const optionsForm = useCommandOptionsForm(currentCommand?.options, ast);
+  /*
+  useEffect(() => {
+    if (!!optionsForm.string && optionsForm.string !== command) {
+      setCommand([command.trimEnd(), optionsForm.string].join(' '));
+    }
+  }, [optionsForm.string]); // eslint-disable-line
+  */
 
   const autocomplete = (() => {
     if (!!selectedSuggestion) return selectedSuggestion.fullCommand;
