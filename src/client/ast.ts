@@ -1,33 +1,33 @@
 // @ts-ignore
 import parseBash from 'bash-parser';
-import {CommandOption} from '../types';
-import {commit} from '../plugins/git';
+import {Command, CommandOption} from '../types';
+import {commandTree} from '../plugins';
 
-type OptionValue = string | number | boolean | string[];
+export type OptionValue = string | number | boolean | string[];
 
-interface ASTCommandNode {
+export interface ASTCommandNode {
   type: 'command';
   command: string;
 }
 
-interface ASTOptionNode {
+export interface ASTOptionNode {
   type: 'option';
   name?: string;
   shortname?: string;
   value: OptionValue;
 }
 
-interface ASTOptionGroupNode {
+export interface ASTOptionGroupNode {
   type: 'optionGroup';
   options: ASTOptionNode[];
 }
 
-interface ASTScriptNode {
+export interface ASTScriptNode {
   type: 'script';
   commands: ASTScriptNodes[];
 }
 
-type ASTScriptNodes = ASTCommandNode | ASTOptionNode | ASTOptionGroupNode;
+export type ASTScriptNodes = ASTCommandNode | ASTOptionNode | ASTOptionGroupNode;
 export type ASTNode = ASTCommandNode | ASTOptionNode | ASTOptionGroupNode | ASTScriptNode;
 
 function isOption(part: string): boolean {
@@ -84,26 +84,25 @@ function parseOption(option: CommandOption, parts: string[]): {
   };
 }
 
-export function parse(
-  commandString: string,
-  options?: CommandOption[] | undefined
-): ASTNode[] {
+export function parse(commandString: string): ASTNode[] {
   const parsed = parseBash(commandString, {mode: 'bash'});
   if (!parsed) throw new Error(`Cannot parse command: "${commandString}"`);
 
-  return parsed.commands.map((command: any): ASTScriptNode => {
+  return parsed.commands.map((parsedCommand: any): ASTScriptNode => {
     const nodes: ASTScriptNodes[] = [];
     nodes.push({
       type: 'command',
-      command: command.name.text
+      command: parsedCommand.name.text
     });
 
-    const parts: string[] = command.suffix.map((p: any) => p.text);
+    let command: Command | undefined = commandTree[parsedCommand.name.text];
+
+    const parts: string[] = parsedCommand.suffix?.map((p: any) => p.text) || [];
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
       if (part.startsWith('--')) {
         const name = part.slice(2);
-        const option = options?.find(byName(name));
+        const option = command?.options?.find(byName(name));
         if (!option) continue;
         const parsed = parseOption(option, parts.slice(i + 1));
         if (!!parsed) {
@@ -116,7 +115,7 @@ export function parse(
           type: 'optionGroup',
           options: shortnames
             .map((shortname, index): ASTOptionNode | undefined => {
-              const option = options?.find(byShortname(shortname));
+              const option = command?.options?.find(byShortname(shortname));
               if (!option) return undefined;
 
               if (index !== shortnames.length - 1) return parseOption(option, [])?.option;
@@ -127,10 +126,8 @@ export function parse(
             .filter((option) => !!option) as ASTOptionNode[],
         });
       } else {
-        nodes.push({
-          type: 'command',
-          command: part
-        });
+        nodes.push({type: 'command', command: part});
+        command = command?.subcommands?.[part];
       }
     }
 
@@ -183,10 +180,10 @@ export function toString(nodes: ASTNode[]): string {
     .join(' ');
 }
 
-/*
-const res1 = parse('git commit -am "wow amaze"', commit.options);
+const res1 = parse('git commit -am "wow amaze"');
 console.warn(JSON.stringify(res1, null, 3));
 console.warn(toString(res1));
+/*
 const res2 = parse('git commit --message "wow amaze"', commit.options);
 console.warn(JSON.stringify(res2, null, 3));
 */

@@ -8,7 +8,7 @@ import {ShellContext} from './client/shellContext';
 import {useStackoverflowSearch} from './plugins/stackoverflow';
 import {AutocompleteSuggestion, Command, CommandTree, CommandOption} from './types';
 import {commandTree} from './plugins';
-import {ASTNode, parse as parseCommandToAST} from './client/ast';
+import {ASTNode, ASTCommandNode, parse as parseCommandToAST, toString as convertASTToString} from './client/ast';
 
 function findCommandLeafRecursive(command: string, tree: CommandTree = commandTree): Command | undefined {
   const parts = command.split(' ').filter((p) => !!p);
@@ -23,7 +23,27 @@ function findCommandLeafRecursive(command: string, tree: CommandTree = commandTr
   return undefined;
 }
 
-function useSubcommandSuggestions(fullCommand: string): AutocompleteSuggestion[] {
+function useSubcommandSuggestions(ast: ASTNode[]): AutocompleteSuggestion[] {
+  const path = ast
+    .filter((node) => node.type === 'command')
+    .map((node) => (node as ASTCommandNode).command)
+    .join('.');
+  
+  const command = _.get(commandTree, path);
+  if (!command?.subcommands) return [];
+  return Object.keys(command.subcommands).map((subcommand) => ({
+    command: subcommand,
+    name: command.subcommands?.[subcommand].name,
+    description: command.subcommands?.[subcommand].description,
+    fullCommand: convertASTToString([
+      ...ast,
+      {type: 'command', command: subcommand},
+    ]),
+  }));
+
+  
+  
+/*
   const commandTreeLeaf = findCommandLeafRecursive(fullCommand);
 
   if (!commandTreeLeaf?.subcommands) return [];
@@ -33,6 +53,7 @@ function useSubcommandSuggestions(fullCommand: string): AutocompleteSuggestion[]
     description: commandTreeLeaf.subcommands?.[subcommand].description,
     fullCommand: [fullCommand, subcommand, ''].map((c) => c.trim()).join(' ')
   }));
+  */
 }
 
 function useCommandAutocomplete(fullCommand: string): AutocompleteSuggestion[] {
@@ -143,7 +164,16 @@ const App: FC = () => {
   const [command, setCommand] = useState('');
   const {runCommand} = useContext(ShellContext);
 
-  const subcommandSuggestions = useSubcommandSuggestions(command);
+  const ast = useMemo<ASTNode[]>(() => {
+    try {
+      const ast = parseCommandToAST(command);
+      if (ast[0].type === 'script') return ast[0].commands;
+      return [];
+    } catch (error) {
+      return [];
+    }
+  }, [command]);
+  const subcommandSuggestions = useSubcommandSuggestions(ast);
   const commandAutocompleteSuggestions = useCommandAutocomplete(command);
   const suggestions = [...subcommandSuggestions, ...commandAutocompleteSuggestions];
 

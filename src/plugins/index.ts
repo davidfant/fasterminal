@@ -4,10 +4,18 @@ import {yarn} from './yarn';
 import {rm} from './rm';
 import {dockerCompose} from './docker-compose';
 import {CommandTree} from '../types';
+import git from './git/command.json';
+// const git = require('./git/commands.json');
+
+Object.keys(gitOverrides).map((key) => {
+  // @ts-ignore
+  Object.assign(git.subcommands[key], gitOverrides[key]);
+})
+
 
 export const commandTree: CommandTree = {
   yarn,
   rm,
-  git: _.merge(require('./git/command.json'), {subcommands: gitOverrides}),
+  git,
   'docker-compose': dockerCompose,
 };
