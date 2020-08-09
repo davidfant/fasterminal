@@ -64,6 +64,9 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
   onChange(formValues: object): void
 } {
   const [formValues, setFormValues] = useState<{[key: string]: any}>({});
+  useEffect(() => {
+    if (!options) setFormValues({});
+  }, [options]);
 
   const component = useMemo((): ReactNode => {
     return options?.map((option) => (
