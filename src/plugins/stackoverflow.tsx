@@ -23,25 +23,43 @@ export function useStackoverflowSearch(command: string, visible: boolean): {
 
     try {
       setLoading(true);
+      /*
       const res = await StackExchange.advancedSearch({
         site: 'stackoverflow',
         q: command,
         sort: 'relevance',
         pageSize: 5
       });
+      // */
+      const res = await fetch(`https://api.stackexchange.com/search/advanced?pagesize=5&site=stackoverflow&sort=relevance&q=${command}`)
+        .then((res) => res.json())
+        .then((res) => ({
+          items: res.items?.map((item: any) => new Question(item))
+        }));
 
-      setQuestions(res.items?.filter((q) => !!q.acceptedAnswerId));
+      console.warn(2, res);
+      console.warn(3, res.items?.filter((q: Question) => !!q.acceptedAnswerId));
+      setQuestions(res.items?.filter((q: Question) => !!q.acceptedAnswerId));
+      console.warn(4);
     } finally {
       setLoading(false);
     }
   }, [command]);
 
   const showAnswer = useCallback(async (question: Question) => {
+    /*
     const res = await StackExchange.getAnswersByIds({
       ids: [String(question.acceptedAnswerId)],
       site: 'stackoverflow',
       filter: 'withbody',
     });
+
+    // */
+    const res = await fetch(`https://api.stackexchange.com/answers/${question.acceptedAnswerId}?site=stackoverflow&filter=withbody`)
+      .then((res) => res.json())
+      .then((res) => ({
+        items: res.items?.map((item: any) => new Answer(item))
+      }));
 
     setAnswer(res.items?.[0]);
     setSelectedQuestion(question);
