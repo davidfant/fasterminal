@@ -42,7 +42,8 @@ function useSubcommandSuggestions(ast: ASTNode[]): AutocompleteSuggestion[] {
   }));
 }
 
-function useCommandAutocomplete(ast: ASTNode[]): AutocompleteSuggestion[] {
+function useCommandAutocomplete(ast: ASTNode[], command: string): AutocompleteSuggestion[] {
+  if (command.endsWith(' ') || ast[ast.length - 1]?.type !== 'command') return [];
   const commandNodes = ast.filter((node) => node.type === 'command') as ASTCommandNode[];
   const baseCommandNodes = commandNodes.slice(0, commandNodes.length - 1);
   const baseCommandPath = baseCommandNodes.map((node) => node.command).join('.');
@@ -164,7 +165,7 @@ const App: FC = () => {
     }
   }, [command]);
   const subcommandSuggestions = useSubcommandSuggestions(ast);
-  const commandAutocompleteSuggestions = useCommandAutocomplete(ast);
+  const commandAutocompleteSuggestions = useCommandAutocomplete(ast, command);
   const suggestions = [...subcommandSuggestions, ...commandAutocompleteSuggestions];
 
   const [selectedSuggestion, setSelectedSuggestion] = useState<AutocompleteSuggestion | undefined>(suggestions[0]);
