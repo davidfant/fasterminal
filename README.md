@@ -1,37 +1,12 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+## Fasterminal
 
-In the project directory, you can run:
+This is the result of a 48h Hackaton aimed at reimagining the Terminal app. One big problem with terminals is discovery. Using `man` or `--help` commands is just terrible UX. Unless you know exactly what you're doing, you're lost. Here is how Fasterminal tries to make this better:
+* Show autocomplete suggestions for commands with more information
+* Display CLI flags visually in forms better learn what's available
+* Integrate with Stack Overflow to get questions answered directly in the Terminal
 
-### `yarn start`
+[Here is a short demo of this project](https://www.loom.com/share/ad2b31e0927449d78448c3a2b06d120c)
+[Download the Mac app here](https://drive.google.com/file/d/1hthB1CNvwEs3v5dB9qMQDFkH0GCjgzkD/view?usp=sharing)
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
-
-### `yarn build`
-
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## To Research
-Building a terminal in Node: https://github.com/dthree/cash
-Creating an AST of bash: https://github.com/vorpaljs/bash-parser (demo: https://vorpaljs.github.io/bash-parser-playground/)
+![Fasterminal Preview](assets/preview.jpg)

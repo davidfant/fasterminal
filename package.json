@@ -13,6 +13,7 @@
     "electron-is-dev": "^1.2.0",
     "electron-packager": "^15.0.0",
     "express": "^4.17.1",
+    "fix-path": "^3.0.0",
     "less": "^3.12.2",
     "less-loader": "^6.2.0",
     "lodash": "^4.17.19",

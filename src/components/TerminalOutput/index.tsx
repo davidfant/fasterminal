@@ -20,7 +20,7 @@ interface Props {
 }
 
 export const TerminalOutput: FC<Props> = ({}) => {
-  const [log, setLog] = useState('');
+  const [log, setLog] = useState('<br/>👋 Welcome to Fasterminal! This terminal currently supports autocomplete for git, docker-compose and yarn.<br/><br/>💡 Checkout <strong><u>git commit</u></strong> and <strong><u>docker-compose logs</u></strong> to see examples of how CLI flags can be transformed into forms.<br/><br/>🕵️‍♂️ Also, if you type something in that the terminal doesn\'t yet understand (for instance <strong><u>git undo commit</u></strong>), you can directly search on StackOverflow and get answers without leaving the terminal.<br/></br>');
 
   const appendLog = useCallback((newLog: string) => setLog([log, newLog].join('\n')), [log]);
   const appendLogRef = useRef(appendLog);

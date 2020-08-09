@@ -31,16 +31,15 @@ export function useStackoverflowSearch(command: string, visible: boolean): {
         pageSize: 5
       });
       // */
+      //*
       const res = await fetch(`https://api.stackexchange.com/search/advanced?pagesize=5&site=stackoverflow&sort=relevance&q=${command}`)
         .then((res) => res.json())
         .then((res) => ({
           items: res.items?.map((item: any) => new Question(item))
         }));
+      // */
 
-      console.warn(2, res);
-      console.warn(3, res.items?.filter((q: Question) => !!q.acceptedAnswerId));
       setQuestions(res.items?.filter((q: Question) => !!q.acceptedAnswerId));
-      console.warn(4);
     } finally {
       setLoading(false);
     }
@@ -53,13 +52,14 @@ export function useStackoverflowSearch(command: string, visible: boolean): {
       site: 'stackoverflow',
       filter: 'withbody',
     });
-
     // */
+    //*
     const res = await fetch(`https://api.stackexchange.com/answers/${question.acceptedAnswerId}?site=stackoverflow&filter=withbody`)
       .then((res) => res.json())
       .then((res) => ({
         items: res.items?.map((item: any) => new Answer(item))
       }));
+    // */
 
     setAnswer(res.items?.[0]);
     setSelectedQuestion(question);

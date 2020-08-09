@@ -1,7 +1,11 @@
 import {app, BrowserWindow} from 'electron';
 import isDev from 'electron-is-dev';
+import fixPath from 'fix-path';
 import * as path from 'path';
 import './index';
+
+// https://github.com/electron/electron/issues/7688#issuecomment-255640358
+fixPath();
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
