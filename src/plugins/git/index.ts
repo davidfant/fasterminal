@@ -1,5 +1,6 @@
-import {Command} from "../types";
+import {Command} from "../../types";
 
+/*
 export const git: Command = {
   name: 'the stupid content tracker',
   description: `Git is a fast, scalable, distributed revision control system with an
@@ -47,3 +48,29 @@ and reverts the working directory to match the HEAD commit.`,
     pull: {}
   }
 };
+*/
+
+export const commit: Partial<Command> = {
+  options: [{
+    type: 'field',
+    fieldType: 'string',
+    name: 'message',
+    shortname: 'm',
+    title: 'Commit message',
+    required: true,
+  }, {
+    type: 'field',
+    fieldType: 'boolean',
+    name: 'all',
+    shortname: 'a',
+    title: 'Stage all modified and deleted files',
+  }, {
+    type: 'select',
+    name: '',
+    title: 'Files to commit (all if empty)',
+    items: [
+      {value: 'some/file.txt', label: 'some/file.txt (modified)'},
+      {value: 'some/remove.txt', label: 'some/remove.txt (deleted)'},
+    ]
+  }]
+}

@@ -36,7 +36,7 @@ function useSubcommandSuggestions(fullCommand: string): AutocompleteSuggestion[]
 
 function useCommandAutocomplete(fullCommand: string): AutocompleteSuggestion[] {
   if (!fullCommand.trim().length) return [];
-  const commandParts = fullCommand.trim().split(' ');
+  const commandParts = fullCommand.split(' ');
   const commandWithoutLastPart = commandParts.slice(0, commandParts.length - 1).join(' ');
   const commandLastPart = commandParts[commandParts.length - 1];
 
@@ -67,7 +67,7 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
 
   const component = useMemo((): ReactNode => {
     return options?.map((option) => (
-      <FormGroup>
+      <FormGroup style={{marginBottom: 8}}>
         <ControlLabel>{option.title}</ControlLabel>
         {(() => {
           if (option.type === 'select') {
@@ -242,7 +242,7 @@ const App: FC = () => {
             style={{top: 'unset', bottom: 'calc(100% + 8px)', maxHeight: 290, overflow: 'scroll'}}
           >
             {!!currentCommand?.options && (
-              <Form onChange={optionsForm.onChange}>
+              <Form style={{padding: 8}} onChange={optionsForm.onChange}>
                 {optionsForm.component}
               </Form>
             )}
