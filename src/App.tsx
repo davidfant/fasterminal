@@ -1,5 +1,5 @@
 import React, {FC, ReactNode, KeyboardEvent, useState, useCallback, useContext, useEffect, useMemo} from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Popover, Dropdown, Container, FormGroup, ControlLabel, HelpBlock, FormControl, Form, CheckPicker, Toggle } from 'rsuite';
 import {TerminalInput} from './components/TerminalInput';
 import {TerminalOutput} from './components/TerminalOutput';
@@ -8,7 +8,7 @@ import {ShellContext} from './client/shellContext';
 import {useStackoverflowSearch} from './plugins/stackoverflow';
 import {AutocompleteSuggestion, Command, CommandTree, CommandOption} from './types';
 import {commandTree} from './plugins';
-import {ASTNode, ASTCommandNode, parse as parseCommandToAST, toString as convertASTToString} from './client/ast';
+import {ASTNode, ASTCommandNode, ASTOptionNode, parse as parseCommandToAST, toString as convertASTToString} from './client/ast';
 
 function useCommand(ast: ASTNode[]): Command | undefined {
   return useMemo(() => {
@@ -69,7 +69,7 @@ function useCommandAutocomplete(ast: ASTNode[], commandString: string): Autocomp
   }, [ast, commandString, lastCommandNode, subcommands]);
 }
 
-function useCommandOptionsForm(options: CommandOption[] | undefined): {
+function useCommandOptionsForm(options: CommandOption[] | undefined, ast: ASTNode[]): {
   string: string | undefined;
   component: ReactNode;
   onChange(formValues: object): void
@@ -78,6 +78,25 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
   useEffect(() => {
     if (!options) setFormValues({});
   }, [options]);
+
+  useEffect(() => {
+    const updatedFormValues = {...formValues};
+    function compareOption(option: ASTOptionNode) {
+      if (!option.name) return;
+      if (!_.isEqual(updatedFormValues[option.name], option.value)) {
+        updatedFormValues[option.name] = option.value;
+      }
+    }
+
+    ast.forEach((node) => {
+      if (node.type === 'option') compareOption(node);
+      if (node.type === 'optionGroup') node.options.map(compareOption);
+    });
+
+    if (!_.isEqual(formValues, updatedFormValues)) {
+      setFormValues(updatedFormValues);
+    }
+  }, [ast, formValues]);
 
   const component = useMemo((): ReactNode => {
     return options?.map((option, index) => (
@@ -100,6 +119,7 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
             return (
               <FormControl
                 name={option.name}
+                value={formValues[option.name]}
                 accepter={CheckPicker}
                 placement="topStart"
                 data={option.items.map(({value, label}) => ({value, label: label || value}))}
@@ -109,17 +129,29 @@ function useCommandOptionsForm(options: CommandOption[] | undefined): {
 
           if (option.type === 'field') {
             if (option.fieldType === 'boolean') {
-              return <FormControl name={option.name} accepter={Toggle} />;
+              return (
+                <FormControl
+                  name={option.name}
+                  value={formValues[option.name]}
+                  accepter={Toggle}
+                />
+              );
             }
           }
 
 
-          return <FormControl name={option.name} type={option.type} />;
+          return (
+            <FormControl
+              name={option.name}
+              value={formValues[option.name]}
+              type={option.type}
+            />
+          );
         })()}
         {option.required && <HelpBlock tooltip>Required</HelpBlock>}
       </FormGroup>
     ));
-  }, [options]);
+  }, [formValues, options]);
 
   return {
     string: !options ? undefined : options
@@ -206,7 +238,7 @@ const App: FC = () => {
     */
   }, [selectedSuggestion, suggestions]);
 
-  const optionsForm = useCommandOptionsForm(currentCommand?.options);
+  const optionsForm = useCommandOptionsForm(currentCommand?.options, ast);
 
   const autocomplete = (() => {
     if (!!selectedSuggestion) return selectedSuggestion.fullCommand;
