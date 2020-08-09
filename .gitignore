@@ -1,5 +1,7 @@
 
 *.DS_Store
 node_modules
+out
 build
+dist
 yarn-error.log

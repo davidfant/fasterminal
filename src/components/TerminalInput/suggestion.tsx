@@ -1,7 +1,6 @@
 import React, {FC, useEffect, useRef} from 'react';
 import {findDOMNode} from 'react-dom';
 import {Tag, Dropdown, HelpBlock} from 'rsuite';
-import DropdownMenuItem from 'rsuite/lib/Dropdown/DropdownMenuItem';
 import {AutocompleteSuggestion} from '../../types';
 
 interface Props {
@@ -14,13 +13,7 @@ export const SuggestionItem: FC<Props> = ({suggestion, selected}) => {
   useEffect(() => {
     if (selected) {
       const node = findDOMNode(containerRef.current) as any;
-      /*
-      node?.scrollIntoViewIfNeeded?.({
-        // behavior: 'smooth',
-        // block: 'center',
-      });
-      */
-     node?.scrollIntoViewIfNeeded?.();
+      node?.scrollIntoViewIfNeeded?.();
     }
   }, [selected, containerRef]);
 

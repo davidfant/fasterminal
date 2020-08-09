@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ChildProcess from 'child_process';
-import * as Bluebird from 'bluebird';
 import _ from 'lodash';
 import {Command} from '../types';
 

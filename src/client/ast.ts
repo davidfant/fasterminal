@@ -179,11 +179,3 @@ export function toString(nodes: ASTNode[]): string {
   })
     .join(' ');
 }
-
-const res1 = parse('git commit -am "wow amaze"');
-console.warn(JSON.stringify(res1, null, 3));
-console.warn(toString(res1));
-/*
-const res2 = parse('git commit --message "wow amaze"', commit.options);
-console.warn(JSON.stringify(res2, null, 3));
-*/
