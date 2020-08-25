@@ -14,7 +14,7 @@ function createWindow() {
     titleBarStyle: 'hidden'
   });
   mainWindow.loadURL(isDev
-    ? 'http://localhost:3001'
+    ? 'http://localhost:3000'
     : `file://${path.join(__dirname, '../../build/index.html')}`);
   // webview.insertCSS(“body { background-color: red !important; }”);
   mainWindow.webContents.on('did-finish-load', function() {

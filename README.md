@@ -10,4 +10,4 @@ This is the result of a 48h Hackaton aimed at reimagining the Terminal app. One 
 
 [Download the Mac app here](https://drive.google.com/file/d/1hthB1CNvwEs3v5dB9qMQDFkH0GCjgzkD/view?usp=sharing)
 
-![Fasterminal Preview](assets/preview.jpg)
+![Fasterminal Preview](assets/preview.gif)
